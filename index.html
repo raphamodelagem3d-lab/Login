@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Firebase</title>
+</head>
+<body>
+  <form id="loginForm">
+    <h3>Login</h3>
+    <input type="email" placeholder="Email" id="email" required>
+    <input type="password" placeholder="Senha" id="senha" required>
+    <button type="submit">Entrar</button>
+  </form>
+
+  <script type="module">
+    // Importando Firebase pelo CDN
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    // Configuração do seu projeto Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCA2XWZzavTNdHi_w8X5aASfBTfoLVsghY",
+      authDomain: "auto-dance.firebaseapp.com",
+      projectId: "auto-dance",
+      storageBucket: "auto-dance.firebasestorage.app",
+      messagingSenderId: "960760470726",
+      appId: "1:960760470726:web:f5af55d01df6a2be0d4bc7",
+      measurementId: "G-SD3VBBD1TL"
+    };
+
+    // Inicializa Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Função de login
+    const form = document.getElementById("loginForm");
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value;
+      const senha = document.getElementById("senha").value;
+
+      signInWithEmailAndPassword(auth, email, senha)
+        .then((userCredential) => {
+          alert("Login bem-sucedido!");
+          window.location.href = "home.html"; // redireciona
+        })
+        .catch((error) => {
+          alert("Erro: " + error.message);
+        });
+    });
+  </script>
+</body>
+</html>
