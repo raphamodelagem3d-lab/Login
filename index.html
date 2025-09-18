@@ -2,19 +2,20 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Registro Firebase</title>
+  <title>Login / Registro Firebase</title>
 </head>
 <body>
-  <form id="registerForm">
-    <h3>Criar Conta</h3>
+  <h3>Login / Registro</h3>
+  <form id="authForm">
     <input type="email" placeholder="Email" id="email" required>
     <input type="password" placeholder="Senha" id="senha" required>
-    <button type="submit">Registrar</button>
+    <button type="submit" id="authButton">Entrar</button>
   </form>
+  <p id="toggleText">Não tem conta? <a href="#" id="toggleLink">Criar conta</a></p>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCA2XWZzavTNdHi_w8X5aASfBTfoLVsghY",
@@ -28,17 +29,39 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    const form = document.getElementById("registerForm");
+    const form = document.getElementById("authForm");
+    const button = document.getElementById("authButton");
+    const toggleLink = document.getElementById("toggleLink");
+    const toggleText = document.getElementById("toggleText");
+
+    let isLogin = true; // true = login, false = registro
+
+    toggleLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      isLogin = !isLogin;
+      button.textContent = isLogin ? "Entrar" : "Criar conta";
+      toggleText.innerHTML = isLogin 
+        ? 'Não tem conta? <a href="#" id="toggleLink">Criar conta</a>'
+        : 'Já tem conta? <a href="#" id="toggleLink">Fazer login</a>';
+
+      // Readiciona o listener no novo link
+      document.getElementById("toggleLink").addEventListener("click", (e) => toggleLink.click());
+    });
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-
       const email = document.getElementById("email").value;
       const senha = document.getElementById("senha").value;
 
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-        alert("Conta criada com sucesso!");
-        window.location.href = "home.html"; // redireciona
+        if (isLogin) {
+          await signInWithEmailAndPassword(auth, email, senha);
+          alert("Login bem-sucedido!");
+        } else {
+          await createUserWithEmailAndPassword(auth, email, senha);
+          alert("Conta criada com sucesso!");
+        }
+        window.location.href = "home.html";
       } catch (error) {
         alert("Erro: " + error.message);
       }
