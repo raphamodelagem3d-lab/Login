@@ -2,25 +2,25 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Login Firebase</title>
+  <title>Registro Firebase</title>
 </head>
 <body>
-  <form id="loginForm">
-    <h3>Login</h3>
+  <form id="registerForm">
+    <h3>Criar Conta</h3>
     <input type="email" placeholder="Email" id="email" required>
     <input type="password" placeholder="Senha" id="senha" required>
-    <button type="submit">Entrar</button>
+    <button type="submit">Registrar</button>
   </form>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCA2XWZzavTNdHi_w8X5aASfBTfoLVsghY",
       authDomain: "auto-dance.firebaseapp.com",
       projectId: "auto-dance",
-      storageBucket: "auto-dance.appspot.com", // Corrigido
+      storageBucket: "auto-dance.appspot.com",
       messagingSenderId: "960760470726",
       appId: "1:960760470726:web:f5af55d01df6a2be0d4bc7"
     };
@@ -28,7 +28,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    const form = document.getElementById("loginForm");
+    const form = document.getElementById("registerForm");
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -36,8 +36,8 @@
       const senha = document.getElementById("senha").value;
 
       try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-        alert("Login bem-sucedido!");
+        const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+        alert("Conta criada com sucesso!");
         window.location.href = "home.html"; // redireciona
       } catch (error) {
         alert("Erro: " + error.message);
