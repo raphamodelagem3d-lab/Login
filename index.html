@@ -6,21 +6,38 @@
 <title>Login & Seleção de Avatar</title>
 <style>
   body {
-    margin:0; font-family:Arial,sans-serif;
-    background:#000 url('IMG_2223.jpeg') no-repeat center center fixed;
-    background-size:cover; color:#fff;
-    display:flex; justify-content:center; align-items:flex-start; min-height:100vh; padding:20px;
+    margin: 0;
+    font-family: Arial,sans-serif;
+    background: #000 url('IMG_2223.jpeg') no-repeat center center fixed;
+    background-size: cover;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 20px;
   }
   .container {
-    background: rgba(0,0,0,0.85); border-radius:20px; padding:30px;
-    width:100%; max-width:900px; box-shadow:0 0 20px rgba(255,255,255,0.3);
-    display:flex; flex-direction:column; align-items:center;
+    background: rgba(0,0,0,0.85);
+    border-radius: 20px;
+    padding: 30px;
+    width: 100%;
+    max-width: 900px;
+    box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   h1 { text-align:center; color:#ff00ff; text-shadow:0 0 10px #ff00ff,0 0 20px #00ffff; margin-bottom:20px; }
   .login-box, .avatar-box { display:flex; flex-direction:column; align-items:center; gap:15px; width:100%; }
-  input[type="email"], input[type="password"], button { padding:12px 20px; font-size:16px; border-radius:12px; border:none; width:250px; }
-  button { background:linear-gradient(45deg,#ff00ff,#00ffff); color:#fff; font-weight:bold; cursor:pointer; transition: background 0.3s, transform 0.2s; }
-  button:hover { transform:scale(1.05); background:linear-gradient(45deg,#00ffff,#ff00ff); }
+  input[type="email"], input[type="password"], button {
+    padding:12px 20px; font-size:16px; border-radius:12px; border:none; width:250px;
+  }
+  button {
+    background: linear-gradient(45deg,#ff00ff,#00ffff);
+    color:#fff; font-weight:bold; cursor:pointer; transition:background 0.3s,transform 0.2s;
+  }
+  button:hover { transform:scale(1.05); background: linear-gradient(45deg,#00ffff,#ff00ff);}
   .avatar-row { display:flex; overflow-x:auto; gap:15px; padding:10px; max-width:100%; box-sizing:border-box; }
   .avatar-row img { width:80px; height:80px; border-radius:12px; border:3px solid transparent; cursor:pointer; transition: transform 0.3s, border-color 0.3s; object-fit:cover; flex-shrink:0; }
   .avatar-row img:hover { transform:scale(1.1); border-color:#ff00ff; }
@@ -49,77 +66,117 @@
 </div>
 
 <script type="module">
-  // Elementos
-  const loginBtn = document.getElementById('loginBtn');
-  const loginBox = document.getElementById('loginBox');
-  const avatarBox = document.getElementById('avatarBox');
-  const avatarRow = document.getElementById('avatarRow');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  const saveAvatarBtn = document.getElementById('saveAvatarBtn');
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-  let avatars = [];
-  let currentPage = 0;
-  const avatarsPerPage = 8;
-  let selectedAvatar = null;
+const firebaseConfig = {
+  apiKey: "AIzaSyCA2XWZzavTNdHi_w8X5aASfBTfoLVsghY",
+  authDomain: "auto-dance.firebaseapp.com",
+  databaseURL: "https://auto-dance-default-rtdb.firebaseio.com",
+  projectId: "auto-dance",
+  storageBucket: "auto-dance.firebasestorage.app",
+  messagingSenderId: "960760470726",
+  appId: "1:960760470726:web:f5af55d01df6a2be0d4bc7"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-  // Simulação login (pode trocar por Firebase)
-  loginBtn.addEventListener('click', ()=>{
-    const email = document.getElementById('email').value.trim();
-    const senha = document.getElementById('senha').value.trim();
-    if(!email || !senha){ alert("Preencha email e senha!"); return; }
-    // Login bem-sucedido
+const loginBtn = document.getElementById('loginBtn');
+const loginBox = document.getElementById('loginBox');
+const avatarBox = document.getElementById('avatarBox');
+const avatarRow = document.getElementById('avatarRow');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const saveAvatarBtn = document.getElementById('saveAvatarBtn');
+
+let avatars = [], currentPage=0, avatarsPerPage=8, selectedAvatar=null;
+const repoOwner = "raphamodelagem3d-lab";
+const repoName = "Login";
+const folderPath = "Just dance avatars";
+
+// Login / criar conta
+loginBtn.addEventListener('click', async ()=>{
+  const email = document.getElementById('email').value.trim();
+  const senha = document.getElementById('senha').value.trim();
+  if(!email||!senha){ alert("Preencha email e senha!"); return; }
+  try{ await signInWithEmailAndPassword(auth,email,senha); }
+  catch(e){ 
+    try{ await createUserWithEmailAndPassword(auth,email,senha); }
+    catch(err){ alert(err.message); return; }
+  }
+});
+
+// Detecta login
+onAuthStateChanged(auth, async user=>{
+  if(user){
     loginBox.style.display='none';
     avatarBox.style.display='flex';
-    loadAvatars();
-  });
 
-  async function loadAvatars(){
-    avatarRow.innerHTML='<p>Carregando avatares...</p>';
-    const repoOwner = "raphamodelagem3d-lab";
-    const repoName = "Login";
-    const folderPath = "Just dance avatars";
-    const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${encodeURIComponent(folderPath)}`;
-    try {
-      const response = await fetch(apiUrl);
-      const files = await response.json();
-      avatars = files.filter(f => f.name.endsWith('.png') || f.name.endsWith('.jpg') || f.name.endsWith('.jpeg'));
-      currentPage = 0;
-      showPage(currentPage);
-    } catch(err){
-      avatarRow.innerHTML='<p>Erro ao carregar avatares!</p>'; console.error(err);
+    // Checa se usuário já tem avatar salvo
+    const userRef = ref(db,"users/"+user.uid);
+    const snapshot = await get(userRef);
+    if(snapshot.exists() && snapshot.val().avatar){
+      selectedAvatar = snapshot.val().avatar;
+      localStorage.setItem('userAvatar', selectedAvatar);
+      // redireciona direto se já tiver avatar
+      window.location.href = 'https://raphamodelagem3d-lab.github.io/Auto-dance-Just-dance-/';
+      return;
     }
+
+    loadAvatars();
   }
+});
 
-  function showPage(page){
-    avatarRow.innerHTML='';
-    const start = page * avatarsPerPage;
-    const end = start + avatarsPerPage;
-    avatars.slice(start,end).forEach(file=>{
-      const img = document.createElement('img');
-      img.src = file.download_url;
-      img.alt = file.name;
-      img.onclick = ()=>{
-        document.querySelectorAll('.avatar-row img').forEach(i=>i.classList.remove('selected'));
-        img.classList.add('selected');
-        selectedAvatar = file.download_url;
-      };
-      avatarRow.appendChild(img);
-    });
+// Carrega avatares do GitHub
+async function loadAvatars(){
+  avatarRow.innerHTML='<p>Carregando avatares...</p>';
+  try{
+    const res = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${encodeURIComponent(folderPath)}`);
+    const files = await res.json();
+    avatars = files.filter(f=>f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg'));
+    currentPage=0; showPage(currentPage);
+  } catch(err){
+    avatarRow.innerHTML='<p>Erro ao carregar avatares!</p>'; console.error(err);
   }
+}
 
-  prevBtn.addEventListener('click', ()=>{
-    if(currentPage>0){ currentPage--; showPage(currentPage); }
+function showPage(page){
+  avatarRow.innerHTML='';
+  const start = page*avatarsPerPage;
+  const end = start+avatarsPerPage;
+  avatars.slice(start,end).forEach(file=>{
+    const img = document.createElement('img');
+    img.src = file.download_url;
+    img.alt = file.name;
+    img.onclick = ()=>{
+      document.querySelectorAll('.avatar-row img').forEach(i=>i.classList.remove('selected'));
+      img.classList.add('selected');
+      selectedAvatar = file.download_url;
+    };
+    if(selectedAvatar===file.download_url) img.classList.add('selected');
+    avatarRow.appendChild(img);
   });
-  nextBtn.addEventListener('click', ()=>{
-    if((currentPage+1)*avatarsPerPage<avatars.length){ currentPage++; showPage(currentPage); }
-  });
+}
 
-  saveAvatarBtn.addEventListener('click', ()=>{
-    if(!selectedAvatar) return alert("Selecione um avatar!");
+prevBtn.addEventListener('click', ()=>{
+  if(currentPage>0){ currentPage--; showPage(currentPage); }
+});
+nextBtn.addEventListener('click', ()=>{
+  if((currentPage+1)*avatarsPerPage<avatars.length){ currentPage++; showPage(currentPage); }
+});
+
+// Salva avatar e redireciona
+saveAvatarBtn.addEventListener('click', async ()=>{
+  if(!selectedAvatar) return alert("Selecione um avatar!");
+  const user = auth.currentUser;
+  if(user){
+    await set(ref(db,"users/"+user.uid), {avatar:selectedAvatar});
     localStorage.setItem('userAvatar', selectedAvatar);
-    window.location.href = 'autodance.html'; // redireciona para Autodance
-  });
+    window.location.href = 'https://raphamodelagem3d-lab.github.io/Auto-dance-Just-dance-/';
+  }
+});
 </script>
 </body>
 </html>
