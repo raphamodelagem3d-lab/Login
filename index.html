@@ -19,18 +19,22 @@
   }
 
   .container {
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.85);
     border-radius: 20px;
     padding: 30px;
     width: 100%;
     max-width: 900px;
     box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   h1 {
     text-align: center;
     color: #ff00ff;
     text-shadow: 0 0 10px #ff00ff, 0 0 20px #00ffff;
+    margin-bottom: 20px;
   }
 
   .login-box, .avatar-box {
@@ -38,6 +42,7 @@
     flex-direction: column;
     align-items: center;
     gap: 15px;
+    width: 100%;
   }
 
   input[type="email"], input[type="password"], button {
@@ -65,8 +70,9 @@
     display: flex;
     overflow-x: auto;
     gap: 15px;
-    margin-top: 20px;
-    padding-bottom: 10px;
+    padding: 10px;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .avatar-row::-webkit-scrollbar {
@@ -81,8 +87,8 @@
   }
 
   .avatar-row img {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     border-radius: 12px;
     border: 3px solid transparent;
     cursor: pointer;
@@ -101,6 +107,13 @@
     box-shadow: 0 0 15px #00ffff, 0 0 25px #ff00ff;
   }
 
+  .pagination {
+    display: flex;
+    justify-content: space-between;
+    width: 250px;
+    margin-top: 10px;
+  }
+
 </style>
 </head>
 <body>
@@ -115,7 +128,11 @@
   <div class="avatar-box" id="avatarBox" style="display:none;">
     <h1>Escolha seu Avatar</h1>
     <div class="avatar-row" id="avatarRow"></div>
-    <button id="saveAvatarBtn">Salvar Avatar</button>
+    <div class="pagination">
+      <button id="prevBtn">Anterior</button>
+      <button id="nextBtn">Próximo</button>
+    </div>
+    <button id="saveAvatarBtn" style="margin-top:15px;">Salvar Avatar</button>
   </div>
 </div>
 
@@ -124,8 +141,13 @@
   const loginBox = document.getElementById('loginBox');
   const avatarBox = document.getElementById('avatarBox');
   const avatarRow = document.getElementById('avatarRow');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
   const saveAvatarBtn = document.getElementById('saveAvatarBtn');
 
+  let avatars = [];
+  let currentPage = 0;
+  const avatarsPerPage = 8;
   let selectedAvatar = null;
 
   loginBtn.addEventListener('click', () => {
@@ -145,26 +167,45 @@
     try {
       const response = await fetch(apiUrl);
       const files = await response.json();
-
-      avatarRow.innerHTML = '';
-      files.forEach(file => {
-        if(file.name.endsWith(".png") || file.name.endsWith(".jpg") || file.name.endsWith(".jpeg")) {
-          const img = document.createElement('img');
-          img.src = file.download_url;
-          img.alt = file.name;
-          img.onclick = () => {
-            document.querySelectorAll('.avatar-row img').forEach(i => i.classList.remove('selected'));
-            img.classList.add('selected');
-            selectedAvatar = file.download_url;
-          };
-          avatarRow.appendChild(img);
-        }
-      });
+      avatars = files.filter(f => f.name.endsWith('.png') || f.name.endsWith('.jpg') || f.name.endsWith('.jpeg'));
+      currentPage = 0;
+      showPage(currentPage);
     } catch(err) {
       avatarRow.innerHTML = '<p>Erro ao carregar avatares!</p>';
       console.error(err);
     }
   }
+
+  function showPage(page) {
+    avatarRow.innerHTML = '';
+    const start = page * avatarsPerPage;
+    const end = start + avatarsPerPage;
+    avatars.slice(start, end).forEach(file => {
+      const img = document.createElement('img');
+      img.src = file.download_url;
+      img.alt = file.name;
+      img.onclick = () => {
+        document.querySelectorAll('.avatar-row img').forEach(i => i.classList.remove('selected'));
+        img.classList.add('selected');
+        selectedAvatar = file.download_url;
+      };
+      avatarRow.appendChild(img);
+    });
+  }
+
+  prevBtn.addEventListener('click', () => {
+    if(currentPage > 0) {
+      currentPage--;
+      showPage(currentPage);
+    }
+  });
+
+  nextBtn.addEventListener('click', () => {
+    if((currentPage+1) * avatarsPerPage < avatars.length) {
+      currentPage++;
+      showPage(currentPage);
+    }
+  });
 
   saveAvatarBtn.addEventListener('click', () => {
     if(!selectedAvatar) return alert("Selecione um avatar!");
