@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login & Seleção de Avatar</title>
-<!-- Fonte Tungsten Bold -->
 <style>
 @font-face {
   font-family: 'Tungsten Bold';
@@ -31,7 +30,7 @@ body {
   border-radius: 16px;
   padding: 40px 30px;
   width: 100%;
-  max-width: 450px;
+  max-width: 500px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -87,32 +86,33 @@ button:hover {
   transform: scale(1.03);
 }
 
-.avatar-row { 
-  display: flex;
-  overflow-x: auto;
+/* GRID DE AVATARES */
+.avatar-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 12px;
-  padding: 8px;
-  max-width: 100%;
+  width: 100%;
+  justify-items: center;
+  padding: 8px 0;
 }
 
-.avatar-row img { 
-  width: 80px; 
-  height: 80px; 
-  border-radius: 10px;
-  border: 2px solid transparent; 
+.avatar-row img {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  border: 2px solid transparent;
   cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s; 
+  transition: transform 0.2s, border-color 0.2s;
   object-fit: cover;
-  flex-shrink: 0;
 }
 
-.avatar-row img:hover { 
-  transform: scale(1.1); 
-  border-color: #ff8800; 
+.avatar-row img:hover {
+  transform: scale(1.1);
+  border-color: #ff8800;
 }
 
-.avatar-row img.selected { 
-  border-color: #ffaa55; 
+.avatar-row img.selected {
+  border-color: #ffaa55;
   box-shadow: 0 0 6px #ffaa55;
 }
 
@@ -192,7 +192,7 @@ const senhaInput = document.getElementById('senha');
 
 let avatars = [];
 let currentPage = 0;
-const avatarsPerPage = 8;
+const avatarsPerPage = 12; // exibe 12 quadradinhos por página
 let selectedAvatar = null;
 let currentUser = null;
 
@@ -227,7 +227,6 @@ onAuthStateChanged(auth, async user => {
     loginBox.style.display = 'none';
     avatarBox.style.display = 'flex';
 
-    // Carrega avatar do usuário se já tiver
     try {
       const userRef = ref(db, "users/"+user.uid);
       const snapshot = await get(userRef);
