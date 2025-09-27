@@ -4,30 +4,137 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login & Seleção de Avatar</title>
+<!-- Fonte Tungsten Bold -->
 <style>
+@font-face {
+  font-family: 'Tungsten Bold';
+  src: url('Tungsten-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
 body {
-  margin:0; font-family:Arial,sans-serif;
-  background:#000 url('IMG_2223.jpeg') no-repeat center center fixed;
-  background-size:cover; color:#fff;
-  display:flex; justify-content:center; align-items:flex-start; min-height:100vh; padding:20px;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #111 url('IMG_2223.jpeg') no-repeat center center fixed;
+  background-size: cover;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px;
 }
+
 .container {
-  background:rgba(0,0,0,0.85); border-radius:20px; padding:30px; width:100%; max-width:900px;
-  box-shadow:0 0 20px rgba(255,255,255,0.3); display:flex; flex-direction:column; align-items:center;
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 16px;
+  padding: 40px 30px;
+  width: 100%;
+  max-width: 450px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
-h1 { text-align:center; color:#ff00ff; text-shadow:0 0 10px #ff00ff,0 0 20px #00ffff; margin-bottom:20px; }
-.login-box, .avatar-box { display:flex; flex-direction:column; align-items:center; gap:15px; width:100%; }
-input[type="email"], input[type="password"], button { padding:12px 20px; font-size:16px; border-radius:12px; border:none; width:250px; }
+
+h1 {
+  text-align: center;
+  color: #ff8800; /* laranja */
+  font-family: 'Tungsten Bold', Arial, sans-serif;
+  margin-bottom: 25px;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.login-box, .avatar-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px; 
+  width: 100%;
+}
+
+input[type="email"], input[type="password"], button {
+  padding: 12px 18px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #555;
+  width: 100%;
+  max-width: 300px;
+  outline: none;
+  background-color: #222;
+  color: #fff;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+input[type="email"]:focus, input[type="password"]:focus {
+  border-color: #ff8800;
+  background-color: #333;
+}
+
 button {
-  background:linear-gradient(45deg,#ff00ff,#00ffff); color:#fff; font-weight:bold; cursor:pointer;
-  transition:background 0.3s, transform 0.2s;
+  background-color: #ff8800;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.2s, transform 0.2s;
 }
-button:hover { transform:scale(1.05); background:linear-gradient(45deg,#00ffff,#ff00ff); }
-.avatar-row { display:flex; overflow-x:auto; gap:15px; padding:10px; max-width:100%; }
-.avatar-row img { width:80px; height:80px; border-radius:12px; border:3px solid transparent; cursor:pointer; transition:transform 0.3s,border-color 0.3s; object-fit:cover; flex-shrink:0; }
-.avatar-row img:hover { transform:scale(1.1); border-color:#ff00ff; }
-.avatar-row img.selected { border-color:#00ffff; box-shadow:0 0 15px #00ffff,0 0 25px #ff00ff; }
-.pagination { display:flex; justify-content:space-between; width:250px; margin-top:10px; }
+
+button:hover {
+  background-color: #ff9900;
+  transform: scale(1.03);
+}
+
+.avatar-row { 
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  padding: 8px;
+  max-width: 100%;
+}
+
+.avatar-row img { 
+  width: 80px; 
+  height: 80px; 
+  border-radius: 10px;
+  border: 2px solid transparent; 
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s; 
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatar-row img:hover { 
+  transform: scale(1.1); 
+  border-color: #ff8800; 
+}
+
+.avatar-row img.selected { 
+  border-color: #ffaa55; 
+  box-shadow: 0 0 6px #ffaa55;
+}
+
+.pagination { 
+  display: flex; 
+  justify-content: space-between; 
+  width: 100%; 
+  max-width: 300px;
+  margin-top: 12px;
+}
+
+.pagination button {
+  background-color: #ff8800;
+  color: #111;
+  font-weight: normal;
+  padding: 8px 14px;
+  border-radius: 6px;
+}
+
+.pagination button:hover {
+  background-color: #ff9900;
+}
 </style>
 </head>
 <body>
@@ -167,11 +274,11 @@ nextBtn.addEventListener('click', ()=>{ if((currentPage+1)*avatarsPerPage<avatar
 saveAvatarBtn.addEventListener('click', async ()=>{
   if(!selectedAvatar) return alert("Selecione um avatar!");
 
-  await set(ref(db,"users/"+currentUser.uid), {avatar: selectedAvatar});
-
-  // Redireciona para site Autodance com avatar salvo no Firebase
-  window.location.href = "https://raphamodelagem3d-lab.github.io/Auto-dance-Just-dance-/";
+  try {
+    await set(ref(db, "users/" + currentUser.uid), { avatar: selectedAvatar });
+    // Redireciona para o site Autodance com avatar salvo
+    window.location.href = "https://raphamodelagem3d-lab.github.io/Auto-dance-Just-dance-/";
+  } catch(err) {
+    alert("Erro ao salvar avatar: " + err.message);
+  }
 });
-</script>
-</body>
-</html>
