@@ -81,8 +81,8 @@ button:hover { background:#ff9900; transform:scale(1.03); }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, updateProfile, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, updateProfile, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCA2XWZzavTNdHi_w8X5aASfBTfoLVsghY",
@@ -197,21 +197,47 @@ changeNameBtn.addEventListener('click', async ()=>{
     await update(ref(db,"users/"+currentUser.uid),{name:newName});
     alert("Nome alterado com sucesso!");
     newNameInput.value="";
-  } catch(e){ alert("Erro ao mudar nome: "+e.message); }
+  } catch(e){
+    if(e.code==='auth/requires-recent-login'){
+      const pw = prompt("Digite sua senha para reautenticação:");
+      if(!pw) return;
+      try{
+        const cred = EmailAuthProvider.credential(currentUser.email, pw);
+        await reauthenticateWithCredential(currentUser, cred);
+        await updateProfile(currentUser,{displayName:newName});
+        await update(ref(db,"users/"+currentUser.uid),{name:newName});
+        alert("Nome alterado com sucesso!");
+        newNameInput.value="";
+      } catch(err2){ alert("Erro na reautenticação: "+err2.message); }
+    } else { alert("Erro ao mudar nome: "+e.message); }
+  }
 });
+
 resetPassBtn.addEventListener('click', async ()=>{
   try{
     await sendPasswordResetEmail(auth,currentUser.email);
     alert("Email de redefinição enviado!");
-  } catch(e){ alert("Erro: "+e.message); }
+  } catch(e){ alert("Erro ao enviar email: "+e.message); }
 });
+
 deleteAccBtn.addEventListener('click', async ()=>{
-  if(confirm("Tem certeza que deseja apagar sua conta?")) {
-    try{
-      await deleteUser(currentUser);
-      alert("Conta apagada com sucesso!");
-      location.reload();
-    } catch(e){ alert("Erro ao apagar conta: "+e.message); }
+  if(!confirm("Tem certeza que deseja apagar sua conta?")) return;
+  try{
+    await deleteUser(currentUser);
+    alert("Conta apagada com sucesso!");
+    location.reload();
+  } catch(e){
+    if(e.code==='auth/requires-recent-login'){
+      const pw = prompt("Digite sua senha para confirmar exclusão:");
+      if(!pw) return;
+      try{
+        const cred = EmailAuthProvider.credential(currentUser.email, pw);
+        await reauthenticateWithCredential(currentUser, cred);
+        await deleteUser(currentUser);
+        alert("Conta apagada com sucesso!");
+        location.reload();
+      } catch(err2){ alert("Erro na reautenticação/exclusão: "+err2.message); }
+    } else { alert("Erro ao apagar conta: "+e.message); }
   }
 });
 </script>
