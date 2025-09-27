@@ -1,71 +1,177 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Login / Registro Firebase</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login & Seleção de Avatar</title>
+<style>
+body {
+  margin:0; font-family:Arial,sans-serif;
+  background:#000 url('IMG_2223.jpeg') no-repeat center center fixed;
+  background-size:cover; color:#fff;
+  display:flex; justify-content:center; align-items:flex-start; min-height:100vh; padding:20px;
+}
+.container {
+  background:rgba(0,0,0,0.85); border-radius:20px; padding:30px; width:100%; max-width:900px;
+  box-shadow:0 0 20px rgba(255,255,255,0.3); display:flex; flex-direction:column; align-items:center;
+}
+h1 { text-align:center; color:#ff00ff; text-shadow:0 0 10px #ff00ff,0 0 20px #00ffff; margin-bottom:20px; }
+.login-box, .avatar-box { display:flex; flex-direction:column; align-items:center; gap:15px; width:100%; }
+input[type="email"], input[type="password"], button { padding:12px 20px; font-size:16px; border-radius:12px; border:none; width:250px; }
+button {
+  background:linear-gradient(45deg,#ff00ff,#00ffff); color:#fff; font-weight:bold; cursor:pointer;
+  transition:background 0.3s, transform 0.2s;
+}
+button:hover { transform:scale(1.05); background:linear-gradient(45deg,#00ffff,#ff00ff); }
+.avatar-row { display:flex; overflow-x:auto; gap:15px; padding:10px; max-width:100%; }
+.avatar-row img { width:80px; height:80px; border-radius:12px; border:3px solid transparent; cursor:pointer; transition:transform 0.3s,border-color 0.3s; object-fit:cover; flex-shrink:0; }
+.avatar-row img:hover { transform:scale(1.1); border-color:#ff00ff; }
+.avatar-row img.selected { border-color:#00ffff; box-shadow:0 0 15px #00ffff,0 0 25px #ff00ff; }
+.pagination { display:flex; justify-content:space-between; width:250px; margin-top:10px; }
+</style>
 </head>
 <body>
-  <h3>Login / Registro</h3>
-  <form id="authForm">
-    <input type="email" placeholder="Email" id="email" required>
-    <input type="password" placeholder="Senha" id="senha" required>
-    <button type="submit" id="authButton">Entrar</button>
-  </form>
-  <p id="toggleText">Não tem conta? <a href="#" id="toggleLink">Criar conta</a></p>
+<div class="container">
+  <!-- LOGIN -->
+  <div class="login-box" id="loginBox">
+    <h1>Entrar</h1>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="senha" placeholder="Senha">
+    <button id="loginBtn">Login / Criar conta</button>
+  </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  <!-- SELEÇÃO DE AVATAR -->
+  <div class="avatar-box" id="avatarBox" style="display:none;">
+    <h1>Escolha seu Avatar</h1>
+    <div class="avatar-row" id="avatarRow"></div>
+    <div class="pagination">
+      <button id="prevBtn">Anterior</button>
+      <button id="nextBtn">Próximo</button>
+    </div>
+    <button id="saveAvatarBtn" style="margin-top:15px;">Salvar Avatar e Continuar</button>
+  </div>
+</div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCA2XWZzavTNdHi_w8X5aASfBTfoLVsghY",
-      authDomain: "auto-dance.firebaseapp.com",
-      projectId: "auto-dance",
-      storageBucket: "auto-dance.appspot.com",
-      messagingSenderId: "960760470726",
-      appId: "1:960760470726:web:f5af55d01df6a2be0d4bc7"
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+// Config Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyCA2XWZzavTNdHi_w8X5aASfBTfoLVsghY",
+  authDomain: "auto-dance.firebaseapp.com",
+  databaseURL: "https://auto-dance-default-rtdb.firebaseio.com",
+  projectId: "auto-dance",
+  storageBucket: "auto-dance.firebasestorage.app",
+  messagingSenderId: "960760470726",
+  appId: "1:960760470726:web:f5af55d01df6a2be0d4bc7"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// Elementos
+const loginBtn = document.getElementById('loginBtn');
+const loginBox = document.getElementById('loginBox');
+const avatarBox = document.getElementById('avatarBox');
+const avatarRow = document.getElementById('avatarRow');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const saveAvatarBtn = document.getElementById('saveAvatarBtn');
+const emailInput = document.getElementById('email');
+const senhaInput = document.getElementById('senha');
+
+let avatars = [];
+let currentPage = 0;
+const avatarsPerPage = 8;
+let selectedAvatar = null;
+let currentUser = null;
+
+// LOGIN / CRIAR CONTA
+loginBtn.addEventListener('click', async () => {
+  const email = emailInput.value.trim();
+  const senha = senhaInput.value.trim();
+  if(!email||!senha){ alert("Preencha email e senha!"); return; }
+
+  try{ await signInWithEmailAndPassword(auth,email,senha); }
+  catch(e){ try{ await createUserWithEmailAndPassword(auth,email,senha); } catch(err){ alert(err.message); return; } }
+});
+
+// DETECTA LOGIN
+onAuthStateChanged(auth, async user => {
+  if(user){
+    currentUser = user;
+    loginBox.style.display = 'none';
+    avatarBox.style.display = 'flex';
+
+    // Carrega avatar do usuário se já tiver
+    const userRef = ref(db, "users/"+user.uid);
+    const snapshot = await get(userRef);
+    if(snapshot.exists() && snapshot.val().avatar){
+      selectedAvatar = snapshot.val().avatar;
+    }
+
+    loadAvatars();
+  } else {
+    currentUser = null;
+    loginBox.style.display = 'flex';
+    avatarBox.style.display = 'none';
+  }
+});
+
+// CARREGA AVATARES DO GITHUB
+async function loadAvatars(){
+  avatarRow.innerHTML = '<p>Carregando avatares...</p>';
+  const repoOwner = "raphamodelagem3d-lab";
+  const repoName = "Login";
+  const folderPath = "Just dance avatars";
+  const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${encodeURIComponent(folderPath)}`;
+
+  try{
+    const response = await fetch(apiUrl);
+    const files = await response.json();
+    avatars = files.filter(f => f.name.endsWith('.png') || f.name.endsWith('.jpg') || f.name.endsWith('.jpeg'));
+    currentPage = 0;
+    showPage(currentPage);
+  } catch(err){
+    avatarRow.innerHTML = '<p>Erro ao carregar avatares!</p>';
+    console.error(err);
+  }
+}
+
+// MOSTRA PÁGINA DE AVATARES
+function showPage(page){
+  avatarRow.innerHTML = '';
+  const start = page*avatarsPerPage;
+  const end = start+avatarsPerPage;
+  avatars.slice(start,end).forEach(file=>{
+    const img = document.createElement('img');
+    img.src = file.download_url;
+    img.alt = file.name;
+    if(selectedAvatar===file.download_url) img.classList.add('selected');
+    img.onclick = () => {
+      document.querySelectorAll('.avatar-row img').forEach(i=>i.classList.remove('selected'));
+      img.classList.add('selected');
+      selectedAvatar = file.download_url;
     };
+    avatarRow.appendChild(img);
+  });
+}
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+prevBtn.addEventListener('click', ()=>{ if(currentPage>0){ currentPage--; showPage(currentPage); }});
+nextBtn.addEventListener('click', ()=>{ if((currentPage+1)*avatarsPerPage<avatars.length){ currentPage++; showPage(currentPage); }});
 
-    const form = document.getElementById("authForm");
-    const button = document.getElementById("authButton");
-    const toggleLink = document.getElementById("toggleLink");
-    const toggleText = document.getElementById("toggleText");
+// SALVA AVATAR E REDIRECIONA
+saveAvatarBtn.addEventListener('click', async ()=>{
+  if(!selectedAvatar) return alert("Selecione um avatar!");
 
-    let isLogin = true; // true = login, false = registro
+  await set(ref(db,"users/"+currentUser.uid), {avatar: selectedAvatar});
 
-    toggleLink.addEventListener("click", (e) => {
-      e.preventDefault();
-      isLogin = !isLogin;
-      button.textContent = isLogin ? "Entrar" : "Criar conta";
-      toggleText.innerHTML = isLogin 
-        ? 'Não tem conta? <a href="#" id="toggleLink">Criar conta</a>'
-        : 'Já tem conta? <a href="#" id="toggleLink">Fazer login</a>';
-
-      // Readiciona o listener no novo link
-      document.getElementById("toggleLink").addEventListener("click", (e) => toggleLink.click());
-    });
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("email").value;
-      const senha = document.getElementById("senha").value;
-
-      try {
-        if (isLogin) {
-          await signInWithEmailAndPassword(auth, email, senha);
-          alert("Login bem-sucedido!");
-        } else {
-          await createUserWithEmailAndPassword(auth, email, senha);
-          alert("Conta criada com sucesso!");
-        }
-        window.location.href = "home.html";
-      } catch (error) {
-        alert("Erro: " + error.message);
-      }
-    });
-  </script>
+  // Redireciona para site Autodance com avatar salvo no Firebase
+  window.location.href = "https://raphamodelagem3d-lab.github.io/Auto-dance-Just-dance-/";
+});
+</script>
 </body>
 </html>
