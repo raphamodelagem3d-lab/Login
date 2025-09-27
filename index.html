@@ -3,29 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login & Seleção de Avatar</title>
+<title>Login & Configuração de Conta</title>
 <style>
-@font-face { font-family:'Tungsten Bold'; src:url('Tungsten-Bold.ttf') format('truetype'); font-weight:bold; }
-body { margin:0; font-family:Arial,sans-serif; background:#111 url('IMG_2294.jpeg') no-repeat center center fixed; background-size:cover; color:#fff; display:flex; justify-content:center; align-items:flex-start; min-height:100vh; padding:20px; }
-.container { background: rgba(0,0,0,0.85); border-radius:16px; padding:40px 30px; width:100%; max-width:450px; display:flex; flex-direction:column; align-items:center; box-shadow:0 4px 12px rgba(0,0,0,0.5);}
-h1 { text-align:center; color:#ff8800; font-family:'Tungsten Bold',Arial,sans-serif; margin-bottom:25px; font-size:28px; font-weight:bold; }
-input[type="email"], input[type="password"], input[type="text"], button { padding:12px 18px; font-size:16px; border-radius:8px; border:1px solid #555; width:100%; max-width:300px; outline:none; background-color:#222; color:#fff; transition: background-color 0.2s, transform 0.2s; }
-input:focus { border-color:#ff8800; background-color:#333; }
-button { background-color:#ff8800; color:#111; font-weight:bold; cursor:pointer; margin-top:10px; transition: background-color 0.2s, transform 0.2s; }
-button:hover { background-color:#ff9900; transform: scale(1.03);}
-.avatar-row { display:flex; overflow-x:auto; gap:12px; padding:8px; max-width:100%; }
-.avatar-row img { width:80px; height:80px; border-radius:10px; border:2px solid transparent; cursor:pointer; transition:transform 0.2s, border-color 0.2s; object-fit:cover; flex-shrink:0; }
-.avatar-row img:hover { transform: scale(1.1); border-color:#ff8800; }
-.avatar-row img.selected { border-color:#ffaa55; box-shadow:0 0 6px #ffaa55; }
-.pagination { display:flex; justify-content:space-between; width:100%; max-width:300px; margin-top:12px; }
-.pagination button { background-color:#ff8800; color:#111; font-weight:normal; padding:8px 14px; border-radius:6px; }
-.pagination button:hover { background-color:#ff9900; }
-#configBox { display:none; flex-direction:column; gap:12px; width:100%; max-width:300px; margin-top:20px; }
-#gearBtn { position:absolute; top:20px; right:20px; cursor:pointer; font-size:24px; color:#ff8800; }
+@font-face {
+  font-family: 'Tungsten Bold';
+  src: url('Tungsten-Bold.ttf') format('truetype');
+  font-weight: bold;
+}
+body {
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: #111 url('IMG_2294.jpeg') no-repeat center center fixed;
+  background-size: cover;
+  color:#fff;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  min-height:100vh;
+  padding:20px;
+}
+.container {
+  background: rgba(0,0,0,0.85);
+  border-radius:16px;
+  padding:30px 25px;
+  width:100%;
+  max-width:450px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  box-shadow:0 4px 12px rgba(0,0,0,0.5);
+  position:relative;
+}
+h1 { color:#ff8800; font-family:'Tungsten Bold',Arial,sans-serif; text-align:center; margin-bottom:20px; }
+input[type="email"], input[type="password"], button, input[type="text"]{
+  width:100%; padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid #555;
+  background:#222; color:#fff; font-size:16px; outline:none;
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+input:focus { background:#333; border-color:#ff8800; }
+button { background:#ff8800; color:#111; font-weight:bold; cursor:pointer; transition:background 0.2s, transform 0.2s; }
+button:hover { background:#ff9900; transform:scale(1.03); }
+.avatar-box, .config-box { display:none; width:100%; flex-direction:column; align-items:center; }
+.avatar-row { display:flex; overflow-x:auto; gap:10px; max-width:100%; padding:5px; border:2px solid #555; border-radius:12px; margin-bottom:10px; }
+.avatar-row img { width:80px; height:80px; border-radius:10px; object-fit:cover; cursor:pointer; border:2px solid transparent; transition:transform 0.2s, border-color 0.2s; }
+.avatar-row img.selected { border-color:#ffaa55; box-shadow:0 0 6px #ffaa55; transform:scale(1.05);}
+.config-box button { margin-top:5px; }
+#gearBtn { position:absolute; top:15px; right:15px; cursor:pointer; font-size:22px; }
 </style>
 </head>
 <body>
 <div class="container">
+
   <div id="loginBox">
     <h1>Entrar</h1>
     <input type="email" id="email" placeholder="Email">
@@ -33,30 +61,27 @@ button:hover { background-color:#ff9900; transform: scale(1.03);}
     <button id="loginBtn">Login / Criar conta</button>
   </div>
 
-  <div id="avatarBox" style="display:none; flex-direction:column; align-items:center;">
+  <div class="avatar-box" id="avatarBox">
     <h1>Escolha seu Avatar</h1>
     <div class="avatar-row" id="avatarRow"></div>
-    <div class="pagination">
-      <button id="prevBtn">Anterior</button>
-      <button id="nextBtn">Próximo</button>
-    </div>
-    <button id="saveAvatarBtn" style="margin-top:15px;">Salvar Avatar e Continuar</button>
+    <button id="saveAvatarBtn">Salvar Avatar e Continuar</button>
   </div>
 
-  <div id="configBox">
+  <div class="config-box" id="configBox">
     <h1>Configuração de Conta</h1>
-    <input type="text" id="newName" placeholder="Novo Nome">
+    <input type="text" id="newName" placeholder="Novo nome">
     <button id="changeNameBtn">Mudar Nome</button>
-    <input type="email" id="resetEmail" placeholder="Email para redefinir senha">
-    <button id="resetPasswordBtn">Redefinir Senha</button>
-    <button id="deleteAccountBtn" style="background:#ff5555; color:#fff;">Apagar Conta</button>
+    <button id="resetPassBtn">Redefinir Senha</button>
+    <button id="deleteAccBtn">Apagar Conta</button>
+    <button id="closeConfigBtn">Fechar</button>
   </div>
+
+  <div id="gearBtn">&#9881;</div>
 </div>
-<div id="gearBtn">&#9881;</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, deleteUser, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, updateProfile, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
@@ -73,50 +98,43 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// Elementos
 const loginBtn = document.getElementById('loginBtn');
 const loginBox = document.getElementById('loginBox');
 const avatarBox = document.getElementById('avatarBox');
 const avatarRow = document.getElementById('avatarRow');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
 const saveAvatarBtn = document.getElementById('saveAvatarBtn');
 const gearBtn = document.getElementById('gearBtn');
 const configBox = document.getElementById('configBox');
+const closeConfigBtn = document.getElementById('closeConfigBtn');
 const newNameInput = document.getElementById('newName');
 const changeNameBtn = document.getElementById('changeNameBtn');
-const resetEmailInput = document.getElementById('resetEmail');
-const resetPasswordBtn = document.getElementById('resetPasswordBtn');
-const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+const resetPassBtn = document.getElementById('resetPassBtn');
+const deleteAccBtn = document.getElementById('deleteAccBtn');
 const emailInput = document.getElementById('email');
 const senhaInput = document.getElementById('senha');
 
 let avatars = [];
-let currentPage = 0;
-const avatarsPerPage = 8;
-let selectedAvatar = null;
 let currentUser = null;
+let selectedAvatar = null;
 
 // LOGIN / CRIAR CONTA
 loginBtn.addEventListener('click', async () => {
   const email = emailInput.value.trim();
   const senha = senhaInput.value.trim();
   if(!email || !senha){ alert("Preencha email e senha!"); return; }
-  try { await signInWithEmailAndPassword(auth,email,senha); } 
-  catch(e){ try{ await createUserWithEmailAndPassword(auth,email,senha); } catch(err){ alert("Erro: "+err.message); } }
+  try{ await signInWithEmailAndPassword(auth,email,senha); }
+  catch(e){
+    try{ await createUserWithEmailAndPassword(auth,email,senha); }
+    catch(err){ alert("Erro ao logar/criar conta: " + err.message); }
+  }
 });
 
-// DETECTA LOGIN
+// ONAUTHSTATECHANGED
 onAuthStateChanged(auth, async user => {
   if(user){
     currentUser = user;
     loginBox.style.display = 'none';
     avatarBox.style.display = 'flex';
-    try {
-      const userRef = ref(db, "users/"+user.uid);
-      const snapshot = await get(userRef);
-      if(snapshot.exists() && snapshot.val().avatar) selectedAvatar = snapshot.val().avatar;
-    } catch(err){ console.error(err); }
     loadAvatars();
   } else {
     currentUser = null;
@@ -126,73 +144,75 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
-// AVATARES
+// GEAR BUTTON
+gearBtn.addEventListener('click', ()=>{
+  if(configBox.style.display==='flex'){ configBox.style.display='none'; }
+  else{ configBox.style.display='flex'; loginBox.style.display='none'; avatarBox.style.display='none'; }
+});
+closeConfigBtn.addEventListener('click', ()=>{
+  configBox.style.display='none';
+  avatarBox.style.display='flex';
+});
+
+// AVATAR LIST
 async function loadAvatars(){
-  avatarRow.innerHTML='<p>Carregando...</p>';
+  avatarRow.innerHTML = '<p>Carregando...</p>';
   const repoOwner="raphamodelagem3d-lab";
   const repoName="Login";
   const folderPath="Just dance avatars";
   const apiUrl=`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${encodeURIComponent(folderPath)}`;
   try {
-    const response=await fetch(apiUrl);
-    const files=await response.json();
-    avatars=files.filter(f=>(f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')) && f.download_url);
-    currentPage=0;
-    showPage(currentPage);
-  } catch(err){ avatarRow.innerHTML='<p>Erro ao carregar avatares!</p>'; console.error(err);}
+    const res = await fetch(apiUrl);
+    const files = await res.json();
+    avatars = files.filter(f => f.name.match(/\.(png|jpg|jpeg)$/i));
+    showAvatars();
+  } catch(e){ avatarRow.innerHTML='<p>Erro ao carregar!</p>'; console.error(e); }
 }
 
-function showPage(page){
+function showAvatars(){
   avatarRow.innerHTML='';
-  const start=page*avatarsPerPage;
-  const end=start+avatarsPerPage;
-  avatars.slice(start,end).forEach(file=>{
+  avatars.forEach(file=>{
     const img=document.createElement('img');
-    img.src=file.download_url; img.alt=file.name;
-    if(selectedAvatar===file.download_url) img.classList.add('selected');
-    img.onclick=()=>{
-      document.querySelectorAll('.avatar-row img').forEach(i=>i.classList.remove('selected'));
-      img.classList.add('selected');
-      selectedAvatar=file.download_url;
-    };
+    img.src=file.download_url;
+    img.onclick=()=>{ document.querySelectorAll('.avatar-row img').forEach(i=>i.classList.remove('selected')); img.classList.add('selected'); selectedAvatar=file.download_url; };
     avatarRow.appendChild(img);
   });
 }
 
-prevBtn.addEventListener('click', ()=>{ if(currentPage>0){ currentPage--; showPage(currentPage); } });
-nextBtn.addEventListener('click', ()=>{ if((currentPage+1)*avatarsPerPage<avatars.length){ currentPage++; showPage(currentPage); } });
-
+// SALVAR AVATAR
 saveAvatarBtn.addEventListener('click', async ()=>{
-  if(!selectedAvatar) return alert("Selecione um avatar!");
-  try {
-    await set(ref(db,"users/"+currentUser.uid), { avatar:selectedAvatar });
+  if(!selectedAvatar){ alert("Selecione um avatar!"); return; }
+  try{
+    await set(ref(db,"users/"+currentUser.uid),{avatar:selectedAvatar});
     window.location.href="https://raphamodelagem3d-lab.github.io/Auto-dance-Just-dance-/";
-  } catch(err){ alert("Erro ao salvar avatar: "+err.message);}
+  } catch(e){ alert("Erro ao salvar avatar: "+e.message); }
 });
 
-// CONFIGURAÇÃO
-gearBtn.addEventListener('click', ()=>{ 
-  configBox.style.display = configBox.style.display==='flex' ? 'none':'flex';
-});
-
+// CONFIGURAÇÃO DE CONTA
 changeNameBtn.addEventListener('click', async ()=>{
   const newName = newNameInput.value.trim();
-  if(!newName) return alert("Digite um nome!");
-  try { await update(ref(db,"users/"+currentUser.uid),{ name:newName }); alert("Nome atualizado!"); newNameInput.value=''; }
-  catch(err){ alert("Erro ao atualizar nome: "+err.message);}
+  if(!newName){ alert("Digite um nome!"); return; }
+  try{
+    await updateProfile(currentUser,{displayName:newName});
+    await update(ref(db,"users/"+currentUser.uid),{name:newName});
+    alert("Nome alterado com sucesso!");
+    newNameInput.value="";
+  } catch(e){ alert("Erro ao mudar nome: "+e.message); }
 });
-
-resetPasswordBtn.addEventListener('click', async ()=>{
-  const email = resetEmailInput.value.trim() || currentUser?.email;
-  if(!email) return alert("Informe um email!");
-  try { await sendPasswordResetEmail(auth,email); alert("Email de redefinição enviado!"); resetEmailInput.value=''; }
-  catch(err){ alert("Erro: "+err.message);}
+resetPassBtn.addEventListener('click', async ()=>{
+  try{
+    await sendPasswordResetEmail(auth,currentUser.email);
+    alert("Email de redefinição enviado!");
+  } catch(e){ alert("Erro: "+e.message); }
 });
-
-deleteAccountBtn.addEventListener('click', async ()=>{
-  if(!confirm("Deseja realmente apagar sua conta?")) return;
-  try { await deleteUser(currentUser); alert("Conta apagada!"); window.location.reload(); }
-  catch(err){ alert("Erro ao apagar conta: "+err.message+"\nVocê pode precisar logar novamente antes.");}
+deleteAccBtn.addEventListener('click', async ()=>{
+  if(confirm("Tem certeza que deseja apagar sua conta?")) {
+    try{
+      await deleteUser(currentUser);
+      alert("Conta apagada com sucesso!");
+      location.reload();
+    } catch(e){ alert("Erro ao apagar conta: "+e.message); }
+  }
 });
 </script>
 </body>
