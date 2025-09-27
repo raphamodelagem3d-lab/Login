@@ -16,7 +16,7 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #111 url('IMG_2223.jpeg') no-repeat center center fixed;
+  background: #111 url('IMG_2294.jpeg') no-repeat center center fixed;
   background-size: cover;
   color: #fff;
   display: flex;
@@ -40,7 +40,7 @@ body {
 
 h1 {
   text-align: center;
-  color: #ff8800; /* laranja */
+  color: #ff8800;
   font-family: 'Tungsten Bold', Arial, sans-serif;
   margin-bottom: 25px;
   font-size: 28px;
@@ -200,24 +200,42 @@ let currentUser = null;
 loginBtn.addEventListener('click', async () => {
   const email = emailInput.value.trim();
   const senha = senhaInput.value.trim();
-  if(!email||!senha){ alert("Preencha email e senha!"); return; }
+  if(!email || !senha){ 
+    alert("Preencha email e senha!"); 
+    return; 
+  }
 
-  try{ await signInWithEmailAndPassword(auth,email,senha); }
-  catch(e){ try{ await createUserWithEmailAndPassword(auth,email,senha); } catch(err){ alert(err.message); return; } }
+  try {
+    console.log("Tentando login com:", email);
+    await signInWithEmailAndPassword(auth,email,senha);
+  } catch(e) {
+    console.warn("Login falhou, tentando criar conta...", e.message);
+    try {
+      await createUserWithEmailAndPassword(auth,email,senha);
+      console.log("Conta criada com sucesso!");
+    } catch(err) {
+      alert("Erro ao logar/criar conta: " + err.message);
+    }
+  }
 });
 
 // DETECTA LOGIN
 onAuthStateChanged(auth, async user => {
+  console.log("onAuthStateChanged:", user);
   if(user){
     currentUser = user;
     loginBox.style.display = 'none';
     avatarBox.style.display = 'flex';
 
     // Carrega avatar do usuário se já tiver
-    const userRef = ref(db, "users/"+user.uid);
-    const snapshot = await get(userRef);
-    if(snapshot.exists() && snapshot.val().avatar){
-      selectedAvatar = snapshot.val().avatar;
+    try {
+      const userRef = ref(db, "users/"+user.uid);
+      const snapshot = await get(userRef);
+      if(snapshot.exists() && snapshot.val().avatar){
+        selectedAvatar = snapshot.val().avatar;
+      }
+    } catch(err){
+      console.error("Erro ao buscar avatar do usuário:", err);
     }
 
     loadAvatars();
@@ -236,10 +254,11 @@ async function loadAvatars(){
   const folderPath = "Just dance avatars";
   const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${encodeURIComponent(folderPath)}`;
 
-  try{
+  try {
     const response = await fetch(apiUrl);
     const files = await response.json();
-    avatars = files.filter(f => f.name.endsWith('.png') || f.name.endsWith('.jpg') || f.name.endsWith('.jpeg'));
+    avatars = files.filter(f => (f.name.endsWith('.png') || f.name.endsWith('.jpg') || f.name.endsWith('.jpeg')) && f.download_url);
+    console.log("Avatares encontrados:", avatars.map(a=>a.name));
     currentPage = 0;
     showPage(currentPage);
   } catch(err){
@@ -251,8 +270,8 @@ async function loadAvatars(){
 // MOSTRA PÁGINA DE AVATARES
 function showPage(page){
   avatarRow.innerHTML = '';
-  const start = page*avatarsPerPage;
-  const end = start+avatarsPerPage;
+  const start = page * avatarsPerPage;
+  const end = start + avatarsPerPage;
   avatars.slice(start,end).forEach(file=>{
     const img = document.createElement('img');
     img.src = file.download_url;
@@ -267,18 +286,24 @@ function showPage(page){
   });
 }
 
-prevBtn.addEventListener('click', ()=>{ if(currentPage>0){ currentPage--; showPage(currentPage); }});
-nextBtn.addEventListener('click', ()=>{ if((currentPage+1)*avatarsPerPage<avatars.length){ currentPage++; showPage(currentPage); }});
+// PAGINAÇÃO
+prevBtn.addEventListener('click', ()=>{ 
+  if(currentPage>0){ currentPage--; showPage(currentPage); }
+});
+nextBtn.addEventListener('click', ()=>{ 
+  if((currentPage+1)*avatarsPerPage<avatars.length){ currentPage++; showPage(currentPage); }
+});
 
 // SALVA AVATAR E REDIRECIONA
 saveAvatarBtn.addEventListener('click', async ()=>{
   if(!selectedAvatar) return alert("Selecione um avatar!");
-
   try {
     await set(ref(db, "users/" + currentUser.uid), { avatar: selectedAvatar });
-    // Redireciona para o site Autodance com avatar salvo
     window.location.href = "https://raphamodelagem3d-lab.github.io/Auto-dance-Just-dance-/";
   } catch(err) {
     alert("Erro ao salvar avatar: " + err.message);
   }
 });
+</script>
+</body>
+</html>
