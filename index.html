@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login & Configuração de Conta</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 @font-face {
   font-family: 'Tungsten Bold';
@@ -43,12 +44,14 @@ input[type="email"], input[type="password"], button, input[type="text"]{
 input:focus { background:#333; border-color:#ff8800; }
 button { background:#ff8800; color:#111; font-weight:bold; cursor:pointer; transition:background 0.2s, transform 0.2s; }
 button:hover { background:#ff9900; transform:scale(1.03); }
-.avatar-box, .config-box { display:none; width:100%; flex-direction:column; align-items:center; }
-.avatar-row { display:flex; overflow-x:auto; gap:10px; max-width:100%; padding:5px; border:2px solid #555; border-radius:12px; margin-bottom:10px; }
+.avatar-box, .config-box, .achievements-box { display:none; width:100%; flex-direction:column; align-items:center; }
+.avatar-row, .achievements-row { display:flex; overflow-x:auto; gap:10px; max-width:100%; padding:5px; border:2px solid #555; border-radius:12px; margin-bottom:10px; }
 .avatar-row img { width:80px; height:80px; border-radius:10px; object-fit:cover; cursor:pointer; border:2px solid transparent; transition:transform 0.2s, border-color 0.2s; }
 .avatar-row img.selected { border-color:#ffaa55; box-shadow:0 0 6px #ffaa55; transform:scale(1.05);}
-.config-box button { margin-top:5px; }
+.achievement { opacity:0; transform:translateX(-30px); transition: all 0.3s ease; display:flex; align-items:center; gap:5px; }
+.achievement.show { opacity:1; transform:translateX(0);}
 #gearBtn { position:absolute; top:15px; right:15px; cursor:pointer; font-size:22px; }
+.xp-display { margin-bottom:10px; font-size:18px; font-weight:bold; color:#ffee00;}
 </style>
 </head>
 <body>
@@ -67,6 +70,12 @@ button:hover { background:#ff9900; transform:scale(1.03); }
     <button id="saveAvatarBtn">Salvar Avatar e Continuar</button>
   </div>
 
+  <div class="achievements-box" id="achievementsBox">
+    <div class="xp-display" id="xpDisplay">XP: 0</div>
+    <h1>Conquistas</h1>
+    <div class="achievements-row" id="achievementsRow"></div>
+  </div>
+
   <div class="config-box" id="configBox">
     <h1>Configuração de Conta</h1>
     <input type="text" id="newName" placeholder="Novo nome">
@@ -82,7 +91,7 @@ button:hover { background:#ff9900; transform:scale(1.03); }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, updateProfile, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCA2XWZzavTNdHi_w8X5aASfBTfoLVsghY",
@@ -103,6 +112,9 @@ const loginBox = document.getElementById('loginBox');
 const avatarBox = document.getElementById('avatarBox');
 const avatarRow = document.getElementById('avatarRow');
 const saveAvatarBtn = document.getElementById('saveAvatarBtn');
+const achievementsBox = document.getElementById('achievementsBox');
+const achievementsRow = document.getElementById('achievementsRow');
+const xpDisplay = document.getElementById('xpDisplay');
 const gearBtn = document.getElementById('gearBtn');
 const configBox = document.getElementById('configBox');
 const closeConfigBtn = document.getElementById('closeConfigBtn');
@@ -116,6 +128,14 @@ const senhaInput = document.getElementById('senha');
 let avatars = [];
 let currentUser = null;
 let selectedAvatar = null;
+let userData = {};
+
+// CONQUISTAS
+const achievementsList = [
+  {id:"first_login", name:"Primeiro Login", xp:50},
+  {id:"select_avatar", name:"Selecionou Avatar", xp:100},
+  {id:"high_xp", name:"Acumulou 500 XP", xp:500},
+];
 
 // LOGIN / CRIAR CONTA
 loginBtn.addEventListener('click', async () => {
@@ -135,11 +155,15 @@ onAuthStateChanged(auth, async user => {
     currentUser = user;
     loginBox.style.display = 'none';
     avatarBox.style.display = 'flex';
+    achievementsBox.style.display = 'flex';
     loadAvatars();
+    loadAchievements();
+    unlockAchievement('first_login'); // primeira conquista
   } else {
     currentUser = null;
     loginBox.style.display = 'flex';
     avatarBox.style.display = 'none';
+    achievementsBox.style.display = 'none';
     configBox.style.display = 'none';
   }
 });
@@ -147,11 +171,12 @@ onAuthStateChanged(auth, async user => {
 // GEAR BUTTON
 gearBtn.addEventListener('click', ()=>{
   if(configBox.style.display==='flex'){ configBox.style.display='none'; }
-  else{ configBox.style.display='flex'; loginBox.style.display='none'; avatarBox.style.display='none'; }
+  else{ configBox.style.display='flex'; loginBox.style.display='none'; avatarBox.style.display='none'; achievementsBox.style.display='none'; }
 });
 closeConfigBtn.addEventListener('click', ()=>{
   configBox.style.display='none';
   avatarBox.style.display='flex';
+  achievementsBox.style.display='flex';
 });
 
 // AVATAR LIST
@@ -179,14 +204,50 @@ function showAvatars(){
   });
 }
 
-// SALVAR AVATAR
+// SALVAR AVATAR COM DESBLOQUEIO
 saveAvatarBtn.addEventListener('click', async ()=>{
   if(!selectedAvatar){ alert("Selecione um avatar!"); return; }
   try{
-    await set(ref(db,"users/"+currentUser.uid),{avatar:selectedAvatar});
-    window.location.href="https://raphamodelagem3d-lab.github.io/Auto-dance-Just-dance-/";
+    await update(ref(db,"users/"+currentUser.uid), {avatar:selectedAvatar});
+    await unlockAchievement('select_avatar');
+    alert("Avatar salvo! Conquista desbloqueada se for a primeira vez!");
   } catch(e){ alert("Erro ao salvar avatar: "+e.message); }
 });
+
+// LOAD E RENDER DE CONQUISTAS
+function loadAchievements(){
+  const achRef = ref(db,"users/"+currentUser.uid);
+  onValue(achRef, snapshot=>{
+    userData = snapshot.val() || {};
+    renderAchievements();
+    // XP display
+    xpDisplay.textContent = `XP: ${userData.xp || 0}`;
+    // desbloqueio automático de XP
+    if((userData.xp || 0) >= 500) unlockAchievement('high_xp');
+  });
+}
+
+function renderAchievements(){
+  achievementsRow.innerHTML = '';
+  achievementsList.forEach((a,idx)=>{
+    const unlocked = userData.achievements?.[a.id];
+    const div = document.createElement('div');
+    div.className = 'achievement';
+    div.innerHTML = `${unlocked ? '<i class="fa-solid fa-trophy"></i>' : '<i class="fa-regular fa-trophy"></i>'} ${a.name} (+${a.xp} XP)`;
+    achievementsRow.appendChild(div);
+    setTimeout(()=>div.classList.add('show'), idx*150);
+  });
+}
+
+// FUNÇÃO DE DESBLOQUEIO AUTOMÁTICO
+async function unlockAchievement(id){
+  if(userData.achievements?.[id]) return;
+  const achievement = achievementsList.find(a=>a.id===id);
+  if(!achievement) return;
+  const newAchievements = {...userData.achievements, [id]:true};
+  const newXp = (userData.xp || 0) + achievement.xp;
+  await update(ref(db,"users/"+currentUser.uid), {achievements: newAchievements, xp: newXp});
+}
 
 // CONFIGURAÇÃO DE CONTA
 changeNameBtn.addEventListener('click', async ()=>{
