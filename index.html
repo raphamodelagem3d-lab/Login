@@ -204,14 +204,23 @@ function showAvatars(){
   });
 }
 
-// SALVAR AVATAR COM DESBLOQUEIO
+// SALVAR AVATAR COM REDIRECIONAMENTO SEMPRE
 saveAvatarBtn.addEventListener('click', async ()=>{
-  if(!selectedAvatar){ alert("Selecione um avatar!"); return; }
+  if(!selectedAvatar){ 
+    alert("Selecione um avatar!"); 
+  }
   try{
-    await update(ref(db,"users/"+currentUser.uid), {avatar:selectedAvatar});
-    await unlockAchievement('select_avatar');
-    alert("Avatar salvo! Conquista desbloqueada se for a primeira vez!");
-  } catch(e){ alert("Erro ao salvar avatar: "+e.message); }
+    if(selectedAvatar){
+      await update(ref(db,"users/"+currentUser.uid), {avatar:selectedAvatar});
+      await unlockAchievement('select_avatar');
+      alert("Avatar salvo! Conquista desbloqueada se for a primeira vez!");
+    }
+  } catch(e){ 
+    alert("Erro ao salvar avatar: "+e.message); 
+  } finally {
+    // 🔗 Redireciona SEMPRE
+    window.location.href = "https://raphamodelagem3d-lab.github.io/auto-dance-Just-dance-";
+  }
 });
 
 // LOAD E RENDER DE CONQUISTAS
