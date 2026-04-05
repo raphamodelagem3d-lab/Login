@@ -12,6 +12,7 @@
   font-weight: bold;
 }
 
+/* AJUSTE DE SCROLL NO BODY */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -20,9 +21,11 @@ body {
   color: #fff;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: flex-start; /* Alinha no topo para o scroll funcionar */
   min-height: 100vh;
-  padding: 20px;
+  padding: 40px 20px; /* Mais respiro nas bordas */
+  box-sizing: border-box;
+  overflow-y: auto; /* Garante o scroll vertical */
 }
 
 .container {
@@ -34,9 +37,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   position: relative;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(8px);
+  margin-bottom: 40px; /* Margem no fundo para o scroll não cortar o box */
 }
 
 h1 { 
@@ -45,23 +49,24 @@ h1 {
     text-align: center; 
     margin-bottom: 20px; 
     text-transform: uppercase;
+    font-size: 2.2em;
 }
 
 input[type="email"], input[type="password"], input[type="text"], button {
   width: 100%; 
-  padding: 12px; 
-  margin-bottom: 10px; 
-  border-radius: 8px; 
-  border: 1px solid #555;
+  padding: 14px; 
+  margin-bottom: 12px; 
+  border-radius: 10px; 
+  border: 1px solid #444;
   background: #222; 
   color: #fff; 
   font-size: 16px; 
   outline: none;
   box-sizing: border-box;
-  transition: 0.2s;
+  transition: 0.3s;
 }
 
-input:focus { background: #333; border-color: #ff8800; }
+input:focus { background: #333; border-color: #ff8800; box-shadow: 0 0 8px rgba(255, 136, 0, 0.3); }
 
 button { 
     background: #ff8800; 
@@ -69,50 +74,72 @@ button {
     font-weight: bold; 
     cursor: pointer; 
     border: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-button:hover { background: #ff9900; transform: scale(1.02); }
-button:disabled { background: #555; cursor: not-allowed; }
+button:hover { background: #ff9900; transform: translateY(-2px); }
+button:active { transform: translateY(0); }
+button:disabled { background: #555; cursor: not-allowed; transform: none; }
 
 .hidden { display: none !important; }
 
-/* Avatar e Conquistas */
+/* AJUSTE DAS LINHAS DE AVATAR E CONQUISTAS */
 .avatar-row, .achievements-row { 
     display: flex; 
     overflow-x: auto; 
-    gap: 10px; 
+    gap: 12px; 
     width: 100%; 
-    padding: 10px; 
-    border: 2px solid #444; 
+    padding: 15px; 
+    border: 1px solid #444; 
     border-radius: 12px; 
-    margin-bottom: 15px; 
+    margin-bottom: 20px; 
     background: rgba(255,255,255,0.05);
+    box-sizing: border-box;
+    /* Custom Scrollbar para mobile */
+    scrollbar-width: thin;
+    scrollbar-color: #ff8800 #222;
 }
 
 .avatar-row img { 
-    width: 80px; 
-    height: 80px; 
-    border-radius: 10px; 
+    width: 90px; 
+    height: 90px; 
+    border-radius: 12px; 
     object-fit: cover; 
     cursor: pointer; 
     border: 3px solid transparent; 
+    flex-shrink: 0; /* Impede que a imagem amasse */
+    transition: 0.2s;
 }
 
-.avatar-row img.selected { border-color: #ff8800; transform: scale(1.05); }
+.avatar-row img.selected { border-color: #ff8800; transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 136, 0, 0.4); }
 
 .achievement { 
     display: flex; 
+    flex-direction: column;
     align-items: center; 
-    gap: 10px; 
-    font-size: 14px; 
-    white-space: nowrap;
-    opacity: 0.4;
+    gap: 8px; 
+    font-size: 12px; 
+    min-width: 100px;
+    text-align: center;
+    opacity: 0.3;
 }
+.achievement i { font-size: 24px; }
 .achievement.unlocked { opacity: 1; color: #ffee00; }
 
-#gearBtn { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 22px; color: #ff8800; }
-.xp-display { margin-bottom: 10px; font-size: 18px; font-weight: bold; color: #ffee00; }
+#gearBtn { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 24px; color: #ff8800; transition: 0.3s; }
+#gearBtn:hover { transform: rotate(45deg); }
 
+.xp-display { 
+    margin-bottom: 15px; 
+    font-size: 22px; 
+    font-weight: bold; 
+    color: #ffee00; 
+    font-family: 'Tungsten Bold', sans-serif;
+    letter-spacing: 1px;
+}
+
+hr { width: 100%; border: 0; border-top: 1px solid #333; margin: 25px 0; }
 </style>
 </head>
 <body>
@@ -121,7 +148,7 @@ button:disabled { background: #555; cursor: not-allowed; }
   <div id="gearBtn" class="hidden"><i class="fas fa-cog"></i></div>
 
   <div id="loginBox">
-    <h1>Entrar</h1>
+    <h1>ENTRAR</h1>
     <input type="email" id="email" placeholder="E-mail">
     <input type="password" id="senha" placeholder="Senha">
     <button id="loginBtn">Entrar / Criar Conta</button>
@@ -130,18 +157,18 @@ button:disabled { background: #555; cursor: not-allowed; }
   <div id="mainBox" class="hidden">
     <div class="xp-display" id="xpDisplay">XP: 0</div>
     
-    <h1>Seu Avatar</h1>
+    <h1>SEU AVATAR</h1>
     <div class="avatar-row" id="avatarRow"></div>
     <button id="saveAvatarBtn">Salvar e Continuar</button>
 
-    <hr style="width:100%; border:0; border-top:1px solid #444; margin: 20px 0;">
+    <hr>
 
-    <h1>Conquistas</h1>
+    <h1>CONQUISTAS</h1>
     <div class="achievements-row" id="achievementsRow"></div>
   </div>
 
   <div id="configBox" class="hidden">
-    <h1>Ajustes</h1>
+    <h1>AJUSTES</h1>
     <input type="text" id="newName" placeholder="Mudar nome">
     <button id="changeNameBtn">Mudar Nome</button>
     <button id="logoutBtn" style="background: #444; color: #fff;">Sair da Conta</button>
@@ -151,7 +178,7 @@ button:disabled { background: #555; cursor: not-allowed; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getDatabase, ref, set, update, onValue, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
@@ -168,7 +195,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// Elementos
 const loginBox = document.getElementById('loginBox');
 const mainBox = document.getElementById('mainBox');
 const configBox = document.getElementById('configBox');
@@ -184,7 +210,6 @@ const achievementsList = [
   {id: "avatar_set", name: "Estiloso", xp: 100}
 ];
 
-// LOGIN
 document.getElementById('loginBtn').onclick = async () => {
   const email = document.getElementById('email').value.trim();
   const senha = document.getElementById('senha').value.trim();
@@ -199,7 +224,6 @@ document.getElementById('loginBtn').onclick = async () => {
   }
 };
 
-// ESTADO DO USUÁRIO
 onAuthStateChanged(auth, user => {
   if(user) {
     currentUser = user;
@@ -217,24 +241,20 @@ onAuthStateChanged(auth, user => {
   }
 });
 
-// DADOS DO FIREBASE
 function loadUserData() {
   onValue(ref(db, `users/${currentUser.uid}`), snap => {
     const data = snap.val() || {};
     document.getElementById('xpDisplay').textContent = `XP: ${data.xp || 0}`;
-    
-    // Render Conquistas
     achievementsRow.innerHTML = "";
     achievementsList.forEach(ach => {
       const isUnlocked = data.achievements && data.achievements[ach.id];
       achievementsRow.innerHTML += `
         <div class="achievement ${isUnlocked ? 'unlocked' : ''}">
-          <i class="fas fa-trophy"></i> ${ach.name} (+${ach.xp}XP)
+          <i class="fas fa-trophy"></i>
+          <span>${ach.name}<br>+${ach.xp}XP</span>
         </div>
       `;
     });
-
-    // Desbloqueia conquista de login se não tiver
     if(!data.achievements?.first_login) unlockAchievement('first_login', 50);
   });
 }
@@ -243,7 +263,6 @@ async function unlockAchievement(id, xpAmount) {
   const userRef = ref(db, `users/${currentUser.uid}`);
   const snap = await get(userRef);
   const data = snap.val() || { xp: 0, achievements: {} };
-  
   if(!data.achievements?.[id]) {
     await update(userRef, {
       [`achievements/${id}`]: true,
@@ -252,7 +271,6 @@ async function unlockAchievement(id, xpAmount) {
   }
 }
 
-// AVATARES DO GITHUB
 async function loadAvatars() {
   avatarRow.innerHTML = "Carregando...";
   try {
@@ -281,7 +299,6 @@ document.getElementById('saveAvatarBtn').onclick = async () => {
   window.location.href = "https://raphamodelagem3d-lab.github.io/Auto-dance-Just-dance-/";
 };
 
-// CONFIGURAÇÕES
 gearBtn.onclick = () => {
     mainBox.classList.add('hidden');
     configBox.classList.remove('hidden');
@@ -291,14 +308,6 @@ document.getElementById('closeConfigBtn').onclick = () => {
     mainBox.classList.remove('hidden');
 };
 document.getElementById('logoutBtn').onclick = () => signOut(auth);
-document.getElementById('changeNameBtn').onclick = async () => {
-    const name = document.getElementById('newName').value;
-    if(name) {
-        await update(ref(db, `users/${currentUser.uid}`), { name: name });
-        alert("Nome alterado!");
-    }
-};
-
 </script>
 </body>
 </html>
