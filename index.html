@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Login & Configuração de Conta</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
@@ -12,7 +12,6 @@
   font-weight: bold;
 }
 
-/* AJUSTE DE SCROLL NO BODY */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -21,38 +20,38 @@ body {
   color: #fff;
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* Alinha no topo para o scroll funcionar */
+  align-items: flex-start;
   min-height: 100vh;
-  padding: 40px 20px; /* Mais respiro nas bordas */
+  padding: 20px;
   box-sizing: border-box;
-  overflow-y: auto; /* Garante o scroll vertical */
+  overflow-y: auto;
 }
 
 .container {
   background: rgba(0, 0, 0, 0.85);
   border-radius: 16px;
-  padding: 30px 25px;
+  padding: 25px;
   width: 100%;
   max-width: 450px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   position: relative;
-  backdrop-filter: blur(8px);
-  margin-bottom: 40px; /* Margem no fundo para o scroll não cortar o box */
+  backdrop-filter: blur(10px);
+  margin-top: 20px;
+  margin-bottom: 50px;
 }
 
 h1 { 
     color: #ff8800; 
     font-family: 'Tungsten Bold', Arial, sans-serif; 
     text-align: center; 
-    margin-bottom: 20px; 
+    margin: 0 0 20px 0;
     text-transform: uppercase;
-    font-size: 2.2em;
+    font-size: 2em;
 }
 
-input[type="email"], input[type="password"], input[type="text"], button {
+input, button {
   width: 100%; 
   padding: 14px; 
   margin-bottom: 12px; 
@@ -61,12 +60,8 @@ input[type="email"], input[type="password"], input[type="text"], button {
   background: #222; 
   color: #fff; 
   font-size: 16px; 
-  outline: none;
   box-sizing: border-box;
-  transition: 0.3s;
 }
-
-input:focus { background: #333; border-color: #ff8800; box-shadow: 0 0 8px rgba(255, 136, 0, 0.3); }
 
 button { 
     background: #ff8800; 
@@ -75,71 +70,76 @@ button {
     cursor: pointer; 
     border: none;
     text-transform: uppercase;
-    letter-spacing: 1px;
 }
-
-button:hover { background: #ff9900; transform: translateY(-2px); }
-button:active { transform: translateY(0); }
-button:disabled { background: #555; cursor: not-allowed; transform: none; }
 
 .hidden { display: none !important; }
 
-/* AJUSTE DAS LINHAS DE AVATAR E CONQUISTAS */
+/* FIX DEFINITIVO DO SCROLL DO AVATAR */
 .avatar-row, .achievements-row { 
     display: flex; 
-    overflow-x: auto; 
-    gap: 12px; 
+    flex-wrap: nowrap; /* Impede quebrar linha */
+    overflow-x: auto; /* Habilita scroll horizontal */
+    overflow-y: hidden;
+    gap: 15px; 
     width: 100%; 
     padding: 15px; 
     border: 1px solid #444; 
     border-radius: 12px; 
     margin-bottom: 20px; 
-    background: rgba(255,255,255,0.05);
+    background: rgba(0, 0, 0, 0.3);
     box-sizing: border-box;
-    /* Custom Scrollbar para mobile */
-    scrollbar-width: thin;
-    scrollbar-color: #ff8800 #222;
+    -webkit-overflow-scrolling: touch; /* Scroll suave mobile */
+}
+
+/* Esconde a barra de scroll feia em alguns navegadores mas mantém a função */
+.avatar-row::-webkit-scrollbar, .achievements-row::-webkit-scrollbar {
+    height: 6px;
+}
+.avatar-row::-webkit-scrollbar-thumb, .achievements-row::-webkit-scrollbar-thumb {
+    background: #ff8800;
+    border-radius: 10px;
 }
 
 .avatar-row img { 
-    width: 90px; 
-    height: 90px; 
+    width: 100px; 
+    height: 100px; 
     border-radius: 12px; 
     object-fit: cover; 
-    cursor: pointer; 
+    flex-shrink: 0; /* CRUCIAL: Impede a imagem de amassar */
     border: 3px solid transparent; 
-    flex-shrink: 0; /* Impede que a imagem amasse */
     transition: 0.2s;
+    cursor: pointer;
 }
 
-.avatar-row img.selected { border-color: #ff8800; transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 136, 0, 0.4); }
+.avatar-row img.selected { 
+    border-color: #ff8800; 
+    transform: scale(1.05);
+}
 
 .achievement { 
+    flex-shrink: 0; /* Impede de amassar */
+    width: 110px;
     display: flex; 
     flex-direction: column;
     align-items: center; 
-    gap: 8px; 
-    font-size: 12px; 
-    min-width: 100px;
     text-align: center;
     opacity: 0.3;
 }
-.achievement i { font-size: 24px; }
+.achievement i { font-size: 28px; margin-bottom: 8px; }
 .achievement.unlocked { opacity: 1; color: #ffee00; }
 
-#gearBtn { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 24px; color: #ff8800; transition: 0.3s; }
-#gearBtn:hover { transform: rotate(45deg); }
+#gearBtn { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 22px; color: #ff8800; z-index: 10; }
 
 .xp-display { 
-    margin-bottom: 15px; 
-    font-size: 22px; 
+    text-align: center;
+    font-size: 24px; 
     font-weight: bold; 
     color: #ffee00; 
     font-family: 'Tungsten Bold', sans-serif;
-    letter-spacing: 1px;
+    margin-bottom: 15px;
 }
 
-hr { width: 100%; border: 0; border-top: 1px solid #333; margin: 25px 0; }
+hr { width: 100%; border: 0; border-top: 1px solid #333; margin: 20px 0; }
 </style>
 </head>
 <body>
@@ -214,7 +214,6 @@ document.getElementById('loginBtn').onclick = async () => {
   const email = document.getElementById('email').value.trim();
   const senha = document.getElementById('senha').value.trim();
   if(!email || !senha) return alert("Preencha tudo!");
-  
   try {
     await signInWithEmailAndPassword(auth, email, senha);
   } catch (e) {
