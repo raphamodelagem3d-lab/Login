@@ -210,6 +210,7 @@ const achievementsList = [
   {id: "avatar_set", name: "Estiloso", xp: 100}
 ];
 
+// LOGIN / CADASTRO
 document.getElementById('loginBtn').onclick = async () => {
   const email = document.getElementById('email').value.trim();
   const senha = document.getElementById('senha').value.trim();
@@ -217,9 +218,11 @@ document.getElementById('loginBtn').onclick = async () => {
   try {
     await signInWithEmailAndPassword(auth, email, senha);
   } catch (e) {
-    try {
-      await createUserWithEmailAndPassword(auth, email, senha);
-    } catch (err) { alert(err.message); }
+    if(e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+        try {
+          await createUserWithEmailAndPassword(auth, email, senha);
+        } catch (err) { alert("Erro ao criar conta: " + err.message); }
+    } else { alert("Erro: " + e.message); }
   }
 };
 
@@ -240,10 +243,17 @@ onAuthStateChanged(auth, user => {
   }
 });
 
+// CARREGAR DADOS SEM SOBRESCREVER (FIX DO XP)
 function loadUserData() {
-  onValue(ref(db, `users/${currentUser.uid}`), snap => {
+  const userRef = ref(db, `users/${currentUser.uid}`);
+  
+  onValue(userRef, (snap) => {
     const data = snap.val() || {};
+    
+    // 1. Atualiza o XP na tela
     document.getElementById('xpDisplay').textContent = `XP: ${data.xp || 0}`;
+    
+    // 2. Renderiza Conquistas
     achievementsRow.innerHTML = "";
     achievementsList.forEach(ach => {
       const isUnlocked = data.achievements && data.achievements[ach.id];
@@ -254,14 +264,21 @@ function loadUserData() {
         </div>
       `;
     });
-    if(!data.achievements?.first_login) unlockAchievement('first_login', 50);
+
+    // 3. Só desbloqueia "Primeiro Login" se for REALMENTE a primeira vez
+    if(!data.achievements?.first_login) {
+        unlockAchievement('first_login', 50);
+    }
   });
 }
 
+// FUNÇÃO DE DESBLOQUEIO SEGURA
 async function unlockAchievement(id, xpAmount) {
   const userRef = ref(db, `users/${currentUser.uid}`);
   const snap = await get(userRef);
   const data = snap.val() || { xp: 0, achievements: {} };
+  
+  // Verifica novamente dentro da transação se já existe para não duplicar XP
   if(!data.achievements?.[id]) {
     await update(userRef, {
       [`achievements/${id}`]: true,
@@ -293,11 +310,23 @@ async function loadAvatars() {
 
 document.getElementById('saveAvatarBtn').onclick = async () => {
   if(!selectedAvatarUrl) return alert("Escolha um avatar!");
-  await update(ref(db, `users/${currentUser.uid}`), { avatar: selectedAvatarUrl });
-  await unlockAchievement('avatar_set', 100);
+  
+  const userRef = ref(db, `users/${currentUser.uid}`);
+  const snap = await get(userRef);
+  const data = snap.val() || {};
+
+  // Atualiza avatar
+  await update(userRef, { avatar: selectedAvatarUrl });
+
+  // Só dá XP de avatar se ele ainda não tiver essa conquista
+  if(!data.achievements?.avatar_set) {
+      await unlockAchievement('avatar_set', 100);
+  }
+  
   window.location.href = "https://raphamodelagem3d-lab.github.io/Auto-dance-Just-dance-/";
 };
 
+// CONTROLES DE INTERFACE
 gearBtn.onclick = () => {
     mainBox.classList.add('hidden');
     configBox.classList.remove('hidden');
@@ -308,5 +337,3 @@ document.getElementById('closeConfigBtn').onclick = () => {
 };
 document.getElementById('logoutBtn').onclick = () => signOut(auth);
 </script>
-</body>
-</html>
